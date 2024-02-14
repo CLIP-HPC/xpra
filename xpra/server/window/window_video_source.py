@@ -1511,7 +1511,9 @@ class WindowVideoSource(WindowSource):
         def get_min_required_scaling(default_value=(1, 1)) -> Tuple[int, int]:
             mw = max_w
             mh = max_h
+            scalinglog("Max size: %s: %s", max_w, max_h)
             if crs:
+                scalinglog("Client is going to downscale anyways: %s", crs)
                 #if the client is going to downscale things anyway,
                 #then there is no need to send at a higher resolution than that:
                 crsw, crsh = crs
@@ -1520,17 +1522,20 @@ class WindowVideoSource(WindowSource):
                 if crsh<max_h:
                     mh = crsh
             if width<=mw and height<=mh:
+                scalinglog("Return default value:%s", default_value)
                 return default_value    #no problem
             # most encoders can't deal with that!
             # sort them from the smallest scaling value to the highest:
             sopts = {}
             for num, den in SCALING_OPTIONS:
                 sopts[num/den] = (num, den)
+            scalinglog("Scaling options:%s", sopts)
             for ratio in reversed(sorted(sopts.keys())):
                 num, den = sopts[ratio]
                 if num==1 and den==1:
                     continue
                 if width*num/den<=mw and height*num/den<=mh:
+                    scalinglog("Return scaling value:%s", sopts[ratio])
                     return (num, den)
             raise ValueError(f"BUG: failed to find a scaling value for window size {width}x{height}")
         def mrs(v=(1, 1), info="using minimum required scaling"):
